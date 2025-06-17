@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MicArray name="ring8_capstone_wall">
+    <pos Name="Point 1" x=" 0.050016725" y="-0.120751055" z="0"/>
+    <pos Name="Point 2" x=" 0.120751055" y="-0.050016725" z="0"/>
+    <pos Name="Point 3" x=" 0.120751055" y=" 0.050016725" z="0"/>
+    <pos Name="Point 4" x=" 0.050016725" y=" 0.120751055" z="0"/>
+    <pos Name="Point 5" x="-0.050016725" y=" 0.120751055" z="0"/>
+    <pos Name="Point 6" x="-0.120751055" y=" 0.050016725" z="0"/>
+    <pos Name="Point 7" x="-0.120751055" y="-0.050016725" z="0"/>
+    <pos Name="Point 8" x="-0.050016725" y="-0.120751055" z="0"/>
+</MicArray>
