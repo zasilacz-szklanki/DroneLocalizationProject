@@ -1,0 +1,180 @@
+
+Czas uruchomienia: 2025-06-09 17:13:08.449718
+Przetwarzanie ./audio/wall1.wav algorytmem BeamformerBase
+Klatki do wygenerowania:  2411
+
+Ca³ko. czas dla ramek:	60.18194429297
+Œredni czas dla ramki:	0.024951054847831677
+Max. czas dla ramki:	0.17582610016688704
+Min. czas dla ramki:	0.018125500064343214
+Czas dla 1 etapu bf:	41.78125
+Czas dla 2 etapu bf:	59.546875
+Zapisano: ./output/wall1_BeamformerBase_points.npy
+Zapisano: ./output/wall1_BeamformerBase_focuspoints.npy
+
+Zapisano: ./output/wall1_BeamformerBase_map.mp4
+
+Czas uruchomienia: 2025-06-09 17:16:24.506111
+Przetwarzanie ./audio/wall1.wav algorytmem BeamformerOrth
+Klatki do wygenerowania:  2411
+
+Ca³ko. czas dla ramek:	62.18336120760068
+Œredni czas dla ramki:	0.025780829688059986
+Max. czas dla ramki:	0.11202949983999133
+Min. czas dla ramki:	0.01997500006109476
+Czas dla 1 etapu bf:	44.96875
+Czas dla 2 etapu bf:	62.15625
+Zapisano: ./output/wall1_BeamformerOrth_points.npy
+Zapisano: ./output/wall1_BeamformerOrth_focuspoints.npy
+
+Zapisano: ./output/wall1_BeamformerOrth_map.mp4
+
+Czas uruchomienia: 2025-06-09 17:19:42.365483
+Przetwarzanie ./audio/wall1.wav algorytmem BeamformerCleansc
+Klatki do wygenerowania:  2411
+
+Ca³ko. czas dla ramek:	588.0144545920193
+Œredni czas dla ramki:	0.2437870873101241
+Max. czas dla ramki:	0.385500299744308
+Min. czas dla ramki:	0.2154858997091651
+Czas dla 1 etapu bf:	461.921875
+Czas dla 2 etapu bf:	584.921875
+Zapisano: ./output/wall1_BeamformerCleansc_points.npy
+Zapisano: ./output/wall1_BeamformerCleansc_focuspoints.npy
+
+Zapisano: ./output/wall1_BeamformerCleansc_map.mp4
+
+Czas uruchomienia: 2025-06-09 17:31:43.865485
+Przetwarzanie ./audio/wall1.wav algorytmem BeamformerCMF
+Klatki do wygenerowania:  2411
+
+Ca³ko. czas dla ramek:	5763.40699038282
+Œredni czas dla ramki:	2.3894722182350003
+Max. czas dla ramki:	3.4873452996835113
+Min. czas dla ramki:	1.5540071995928884
+Czas dla 1 etapu bf:	4598.953125
+Czas dla 2 etapu bf:	5049.28125
+Zapisano: ./output/wall1_BeamformerCMF_points.npy
+Zapisano: ./output/wall1_BeamformerCMF_focuspoints.npy
+
+Zapisano: ./output/wall1_BeamformerCMF_map.mp4
+
+Czas uruchomienia: 2025-06-09 19:10:08.506109
+Przetwarzanie ./audio/wall2.wav algorytmem BeamformerBase
+Klatki do wygenerowania:  1252
+
+Ca³ko. czas dla ramek:	28.896072709932923
+Œredni czas dla ramki:	0.023061510542643993
+Max. czas dla ramki:	0.11915739998221397
+Min. czas dla ramki:	0.018130400218069553
+Czas dla 1 etapu bf:	20.0
+Czas dla 2 etapu bf:	28.96875
+Zapisano: ./output/wall2_BeamformerBase_points.npy
+Zapisano: ./output/wall2_BeamformerBase_focuspoints.npy
+
+Zapisano: ./output/wall2_BeamformerBase_map.mp4
+
+Czas uruchomienia: 2025-06-09 19:11:47.895360
+Przetwarzanie ./audio/wall2.wav algorytmem BeamformerOrth
+Klatki do wygenerowania:  1252
+
+Ca³ko. czas dla ramek:	31.924169194418937
+Œredni czas dla ramki:	0.025478187705043048
+Max. czas dla ramki:	0.10668270010501146
+Min. czas dla ramki:	0.020926399622112513
+Czas dla 1 etapu bf:	23.453125
+Czas dla 2 etapu bf:	31.90625
+Zapisano: ./output/wall2_BeamformerOrth_points.npy
+Zapisano: ./output/wall2_BeamformerOrth_focuspoints.npy
+
+Zapisano: ./output/wall2_BeamformerOrth_map.mp4
+
+Czas uruchomienia: 2025-06-09 19:13:29.629733
+Przetwarzanie ./audio/wall2.wav algorytmem BeamformerCleansc
+Klatki do wygenerowania:  1252
+
+Ca³ko. czas dla ramek:	315.98443320486695
+Œredni czas dla ramki:	0.2521823090222402
+Max. czas dla ramki:	0.5653777997940779
+Min. czas dla ramki:	0.20432720007374883
+Czas dla 1 etapu bf:	245.078125
+Czas dla 2 etapu bf:	309.84375
+Zapisano: ./output/wall2_BeamformerCleansc_points.npy
+Zapisano: ./output/wall2_BeamformerCleansc_focuspoints.npy
+
+Zapisano: ./output/wall2_BeamformerCleansc_map.mp4
+
+Czas uruchomienia: 2025-06-09 19:19:59.572172
+Przetwarzanie ./audio/wall2.wav algorytmem BeamformerCMF
+Klatki do wygenerowania:  1252
+
+Ca³ko. czas dla ramek:	3045.73645709455
+Œredni czas dla ramki:	2.430755352828851
+Max. czas dla ramki:	3.871220499742776
+Min. czas dla ramki:	1.6587973004207015
+Czas dla 1 etapu bf:	2469.609375
+Czas dla 2 etapu bf:	2690.515625
+Zapisano: ./output/wall2_BeamformerCMF_points.npy
+Zapisano: ./output/wall2_BeamformerCMF_focuspoints.npy
+
+Zapisano: ./output/wall2_BeamformerCMF_map.mp4
+
+Czas uruchomienia: 2025-06-09 20:11:55.740371
+Przetwarzanie ./audio/wall3.wav algorytmem BeamformerBase
+Klatki do wygenerowania:  3410
+
+Ca³ko. czas dla ramek:	79.69087519636378
+Œredni czas dla ramki:	0.023362906829775366
+Max. czas dla ramki:	0.1209184997715056
+Min. czas dla ramki:	0.018058099783957005
+Czas dla 1 etapu bf:	55.546875
+Czas dla 2 etapu bf:	79.765625
+Zapisano: ./output/wall3_BeamformerBase_points.npy
+Zapisano: ./output/wall3_BeamformerBase_focuspoints.npy
+
+Zapisano: ./output/wall3_BeamformerBase_map.mp4
+
+Czas uruchomienia: 2025-06-09 20:16:25.859918
+Przetwarzanie ./audio/wall3.wav algorytmem BeamformerOrth
+Klatki do wygenerowania:  3410
+
+Ca³ko. czas dla ramek:	87.06464063283056
+Œredni czas dla ramki:	0.025524667438531386
+Max. czas dla ramki:	0.13834699988365173
+Min. czas dla ramki:	0.020883500110358
+Czas dla 1 etapu bf:	63.203125
+Czas dla 2 etapu bf:	87.015625
+Zapisano: ./output/wall3_BeamformerOrth_points.npy
+Zapisano: ./output/wall3_BeamformerOrth_focuspoints.npy
+
+Zapisano: ./output/wall3_BeamformerOrth_map.mp4
+
+Czas uruchomienia: 2025-06-09 20:20:59.359921
+Przetwarzanie ./audio/wall3.wav algorytmem BeamformerCleansc
+Klatki do wygenerowania:  3410
+
+Ca³ko. czas dla ramek:	821.6074361782521
+Œredni czas dla ramki:	0.24086996076759076
+Max. czas dla ramki:	0.36847779992967844
+Min. czas dla ramki:	0.19026389997452497
+Czas dla 1 etapu bf:	647.90625
+Czas dla 2 etapu bf:	820.078125
+Zapisano: ./output/wall3_BeamformerCleansc_points.npy
+Zapisano: ./output/wall3_BeamformerCleansc_focuspoints.npy
+
+Zapisano: ./output/wall3_BeamformerCleansc_map.mp4
+
+Czas uruchomienia: 2025-06-09 20:37:48.547424
+Przetwarzanie ./audio/wall3.wav algorytmem BeamformerCMF
+Klatki do wygenerowania:  3410
+
+Ca³ko. czas dla ramek:	8700.823969021905
+Œredni czas dla ramki:	2.5508132421641467
+Max. czas dla ramki:	3.793834699783474
+Min. czas dla ramki:	1.6426450000144541
+Czas dla 1 etapu bf:	6721.75
+Czas dla 2 etapu bf:	7703.015625
+Zapisano: ./output/wall3_BeamformerCMF_points.npy
+Zapisano: ./output/wall3_BeamformerCMF_focuspoints.npy
+
+Zapisano: ./output/wall3_BeamformerCMF_map.mp4

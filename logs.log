@@ -1,0 +1,15 @@
+
+Czas uruchomienia: 2025-06-12 00:16:25.550327
+Przetwarzanie ./audio/wall3.wav algorytmem BeamformerBase
+Klatki do wygenerowania:  3410
+
+Ca³ko. czas dla ramek:	78.36565430028713
+Œredni czas dla ramki:	0.022974392934707457
+Max. czas dla ramki:	0.1073677999956999
+Min. czas dla ramki:	0.018022399992332794
+Czas dla 1 etapu bf:	54.3125
+Czas dla 2 etapu bf:	78.390625
+Zapisano: ./output/wall3_BeamformerBase_points.npy
+Zapisano: ./output/wall3_BeamformerBase_focuspoints.npy
+
+Zapisano: ./output/wall3_BeamformerBase_map.mp4

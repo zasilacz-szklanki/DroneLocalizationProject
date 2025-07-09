@@ -1,0 +1,917 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in, top=1in]{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath} % Recommended for all math-related commands
+\usepackage{amssymb} % This package provides the \mathbb command
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[table]{xcolor}
+\usepackage{longtable} % Pakiet do obsługi długich tabel
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage[skip=5mm]{caption}
+\usepackage{comment}
+\usepackage{multirow}
+\usepackage[table]{xcolor}
+\usepackage[polish]{babel}
+\usepackage{csquotes}
+\usepackage[
+    style=numeric,
+    backend=biber
+]{biblatex}
+\addbibresource{literature.bib} % <- plik z bibliografią
+\usepackage{svg}
+
+\hypersetup{
+    colorlinks=true,       % false: boxed links; true: colored links
+    linkcolor=black,       % color of internal links
+    citecolor=black,       % color of links to bibliography
+    filecolor=black,       % color of file links
+    urlcolor=blue         % color of external links
+}
+
+\definecolor{llgray}{HTML}{dddddd}
+\definecolor{darkgreen}{HTML}{008000}
+\definecolor{customblue}{HTML}{CCFFCB}
+\definecolor{znaczki}{HTML}{ee3333}
+
+\renewcommand{\figurename}{Rysunek}
+\renewcommand{\contentsname}{Spis Treści}
+\renewcommand{\tablename}{Tabela}
+
+\lstset{
+    language=C,
+    inputencoding=utf8,
+    extendedchars=true,
+    literate=  
+        {ą}{{\k{a}}}1 {ć}{{\'c}}1 {ę}{{\k{e}}}1
+        {ł}{{\l}}1 {ń}{{\'n}}1 {ó}{{\'o}}1
+        {ś}{{\'s}}1 {ź}{{\'z}}1 {ż}{{\.z}}1
+        {Ą}{{\k{A}}}1 {Ć}{{\'C}}1 {Ę}{{\k{E}}}1
+        {Ł}{{\L}}1 {Ń}{{\'N}}1 {Ó}{{\'O}}1
+        {Ś}{{\'S}}1 {Ź}{{\'Z}}1 {Ż}{{\.Z}}1
+        % Znaki specjalne
+        {.}{{{\color{znaczki}.}}}1
+        {,}{{{\color{znaczki},}}}1
+        {+}{{{\color{znaczki}+}}}1
+        {-}{{{\color{znaczki}-}}}1
+        {=}{{{\color{znaczki}=}}}1
+        {|}{{{\color{znaczki}|}}}1
+        {!}{{{\color{znaczki}!}}}1
+        {>}{{{\color{znaczki}>}}}1
+        {<}{{{\color{znaczki}<}}}1
+        {;}{{{\color{znaczki};}}}1
+        {&}{{{\color{znaczki}\&}}}1
+        {\%}{{{\color{znaczki}\%}}}1,
+    basicstyle=\ttfamily\small\color{white},
+    keywordstyle=\color{cyan}\bfseries,
+    commentstyle=\color{green!70},
+    stringstyle=\color{yellow!90},
+    identifierstyle=\color{white},
+    backgroundcolor=\color{black!80},
+    numbers=left,
+    numberstyle=\tiny\color{gray}, 
+    stepnumber=1,
+    numbersep=8pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    frame=single,
+    tabsize=4,
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=true,
+    escapeinside={(*@}{@*)},
+    title=\lstname
+}
+
+\begin{document}
+
+\pagenumbering{gobble}
+
+\begin{titlepage}
+\centering
+\vspace*{\fill}
+\rule{\textwidth}{1pt}\\[1em]
+{\fontsize{36pt}{38pt}\selectfont Lokalizacja drona na podstawie dzwięku}\\[1em]
+%{\fontsize{24pt}{26pt}\selectfont .}\\[1em]
+{Kacper Błaszczyk 251485}
+\rule{\textwidth}{1pt}
+{\today}
+\vspace*{\fill}
+
+\end{titlepage}
+
+\setcounter{tocdepth}{3}
+\tableofcontents
+
+\newpage
+\pagenumbering{arabic}
+
+\section{Cel projektu}
+Projekt polegał na implementacji, uruchomieniu i wykonaniu eksperymentów polegających na porównaniu skuteczności i wydajności lokalizacji drona przy użyciu algorytmów: DAS, Ortogonalny, Clean-SC, CMF. Implementacja została oparta o bibliotekę Acoular.
+
+\section{Preliminaria}
+
+\subsection{Definicje}
+\subsubsection{Uśrednianie}
+Dla wektora sygnału \( \xi(t) \), macierz korelacji krzyżowej \( \langle \xi\xi^{\dagger} \rangle \) jest obliczana jako:
+
+\begin{equation}
+\langle \xi\xi^{\dagger} \rangle = \frac{1}{T} \int_{0}^{T} \xi(t) \xi^{\dagger}(t) dt,
+\end{equation}
+
+gdzie:
+
+\begin{itemize}
+    \item \( \xi(t) \) – wektor sygnału w czasie \( t \),
+    \item \( \xi^{\dagger}(t) \) – sprzężenie hermitowskie wektora \( \xi(t) \),
+    \item \( T \) – całkowity czas obserwacji,
+\end{itemize}
+Dla sygnałów dyskretnych uśrednianie w czasie przyjmuje postać sumy:
+
+\begin{equation}
+\langle \xi\xi^{\dagger} \rangle = \frac{1}{N} \sum_{n=1}^{N} \xi[n] \xi^{\dagger}[n],
+\end{equation}
+
+gdzie:
+
+\begin{itemize}
+    \item \( \xi[n] \) – wektor sygnału w \( n \)-tej próbce czasowej
+    \item \( \xi^{\dagger}[n] \) – sprzężenie hermitowskie wektora \( \xi[n] \)
+    \item \( N \) – liczba próbek w czasie
+\end{itemize}
+
+\subsubsection{Norma $L_p$}
+Dla wektora $\mathbf{x}=
+\begin{bmatrix}
+x_1 & x_2 & \hdots & x_n
+\end{bmatrix}
+^T
+\in \mathbb{R}^n
+$
+norma $L_p$ ($p\in\mathbb{R} \land p\ge 1$)jest definiowana jako:
+\begin{equation}
+\|\mathbf{x}\|_p = 
+\left(
+    \sum_{i=1}^{n} |x_i|^p
+\right) ^{\frac{1}{p}}
+\end{equation}
+W szczególności:
+\begin{itemize}
+\item{Norma $L_1$ (norma Manhattan):
+$$
+    \|\mathbf{x}\|_1=\sum_{i=1}^{n} |x_i|
+$$
+}
+\item{Norma $L_2$ (norma Euklidesowa):
+$$
+    \|\mathbf{x}\|_2 = \left( \sum_{i=1}^{n} x_i^2 \right)^{\frac{1}{2}}
+$$
+}
+\item{Norma $L_\infty$ (norma maksimum, Czebyszewa):
+$$
+    \|\mathbf{x}\|_\infty = \max_i |x_i|
+$$
+}
+\end{itemize}
+
+\subsubsection{Sprzężenie hermitowskie macierzy}
+Dla macierzy $\mathbb{M}_{n \times k}(\mathbb{C})$ złożenie operacji transpozycji i sprzężenia zespolonego:
+\begin{equation}
+A^\dagger=\overline{A^T}
+\end{equation}
+\begin{equation*}
+\left( A^\dagger \right)_{ij}=\overline{A_{ji}}
+\end{equation*}
+
+\subsection{Algorytm DAS}
+Algorytm Delay and Sum (DAS), znany również jako konwencjonalny beamforming, stanowi podstawową i pierwotną technikę beamformingu. Jest to metoda przetwarzania danych służąca do przestrzennego filtrowania sygnałów pochodzących z macierzy czujników. Głównym celem DAS, w kontekście tego opracowania, jest lokalizacja źródeł dzwięku.\\\\
+DAS opiera się na zależności między źródłem a odbiornikiem. Algorytm ten dąży do wykrycia opóźnienia fazowego poprzez wirtualne sterowanie macierzy w określonym kierunku lub punkcie w przestrzeni.\\\\
+Proces polega na:
+\begin{enumerate}
+    \item Przyjęciu siatki $N_{points}$ punktów kontrolnych ($\vec{x}_p$), w których potencjalnie mogą znajdować się źródła dźwięku, oraz dyskretnego zestawu $M$ mikrofonów ($\vec{x}_m$), które próbkują pole dźwiękowe.
+    \item Propagacji wstecznej każdego sygnału czasowego zarejestrowanego przez mikrofon do każdego punktu kontrolnego. Uwzględnia się przy tym względną pozycję punktu kontrolnego i mikrofonu oraz prędkość propagacji fali akustycznej w danym medium. Te dwa czynniki dostarczają informacji o opóźnieniu czasowym (lub przesunięciu fazowym), które należy uwzględnić podczas wirtualnego ogniskowania macierzy na określony punkt kontrolny.
+    \item Zsumowaniu opóźnionych danych w celu uzyskania wyjścia beamformera dla danego punktu kontrolnego. Jeśli źródło znajduje się w punkcie kontrolnym, opóźnione sygnały są w fazie, a wynik beamformera jest maksymalizowany. Jeśli macierz ogniskowana jest na punkt odległy od rzeczywistego źródła, sygnały nie są w fazie, co skutkuje niższym wynikiem.
+\end{enumerate}
+W praktyce, punkty kontrolne są skanowane, a wartość wyjścia beamformera ($\text{bf}(\vec{x}_p, t)$) jest obliczana i rejestrowana dla każdego z nich. W ten sposób tworzona jest mapa amplitud, a pozycja źródła jest szacowana na podstawie punktów kontrolnych, które dają maksymalne wartości $\text{bf}(\vec{x}_p, t)$. Opóźnienia umożliwiają konstruktywną interferencję z określonych kątów i destrukcyjną interferencję z innych.
+
+\subsubsection{Dziedzina Czasu}
+W dziedzinie czasu wyjście beamformera $\text{bf}(\vec{x}_p, t)$ w $p$-tym punkcie kontrolnym w $t$-tej chwili czasowej można obliczyć za pomocą następującego wzoru:
+\begin{equation}
+\label{eq:das_time}
+\text{bf}(\vec{x}_p, t) = \frac{1}{M} \sum_{m=1}^{M} w_m A_m(\vec{x}_p, \vec{x}_m) p_m \left( t - \frac{|\vec{x}_p - \vec{x}_m|}{c} \right)
+\end{equation}
+gdzie:
+\begin{itemize}
+    \item $p_m$: - sygnał ciśnienia zarejestrowany przez $m$-ty mikrofon.
+    \item $w_m$ - współczynnik wagowy (ang. weighting factor) zastosowany do pojedynczego $m$-tego mikrofonu, używany do optymalizacji ogólnego wyniku. Konwencjonalne algorytmy beamformingu mają stałe wagi czujników.
+    \item $A_m(\vec{x}_p, \vec{x}_m)$ - współczynnik skali, który może uwzględniać redukcję amplitudy, np. $A_m(\vec{x}_p, \vec{x}_m) = \frac{1}{4\pi k |\vec{x}_p - \vec{x}_m|}$. Współczynnik ten bierze pod uwagę tłumienie amplitudy fali z powodu odległości między źródłem a mikrofonem.
+    \item $c$ - prędkość propagacji fali akustycznej w danym medium.
+    \item $\vec{x}_p$ - położenie $p$-tego punktu kontrolnego.
+    \item $\vec{x}_m$ - położenie $m$-tego mikrofonu.
+\end{itemize}
+Ciśnienia akustyczne mierzone w każdej lokalizacji mikrofonu $\vec{x}_m$ są ważone, skalowane i opóźniane zgodnie z względną odległością między każdym mikrofonem a rozważanym $p$-tym punktem kontrolnym, a następnie sumowane, co daje wynik beamformera, stąd nazwa Delay \& Sum Beamforming (Opóźnienie i Sumowanie).
+
+\subsubsection{Dziedzina Częstotliwości}
+Równanie beamformingu w dziedzinie czasu można również przenieść na dziedzinę częstotliwości. Transformatę Fouriera sygnału ciśnienia $p_m(t)$ dla $m$-tego mikrofonu w dziedzinie częstotliwości oznacza się jako $P_m(\omega_k)$. W dziedzinie częstotliwości, DAS można zapisać jako:
+\begin{equation}
+\label{eq:das_freq}
+\text{BF}(\vec{x}_p, \omega_k) = \frac{1}{M} \sum_{m=1}^{M} w_m A_m(\vec{x}_p, \vec{x}_m) P_m(\omega_k) e^{j\omega_k \Delta_{p,m}}
+\end{equation}
+gdzie:
+\begin{itemize}
+    \item $P_m(\omega_k)$ - sygnał ciśnienia $m$-tego mikrofonu przy częstotliwości kątowej $\omega_k$.
+    \item $e^{j\omega_k \Delta_{p,m}}$ - przesunięcie fazowe używane do sterowania macierzy w kierunku $\vec{x}_p$.
+    \item $\Delta_{p,m} = \frac{|\vec{x}_p - \vec{x}_m|}{c}$ - opóźnienie czasowe/przesunięcie fazowe dla $m$-tego mikrofonu względem punktu kontrolnego $\vec{x}_p$.
+\end{itemize}
+
+
+\subsection{Algorytm Ortogonalny}
+Główna idea polega na dekompozycji pola dźwiękowego na ortogonalne składowe, z których każda odpowiada innemu mechanizmowi źródłowemu. Odbywa się to poprzez analizę macierzy korelacji krzyżowej (CSM) sygnałów zarejestrowanych przez mikrofony. Wyniki algorytmu konwencjonalnego beamformingu (CB) mogą być post-przetwarzane, aby uzyskać „wyczyszczoną” mapę akustyczną, pozbawioną fałszywych źródeł, pozostawiając tylko te rzeczywiste.
+
+\subsubsection{Modelowanie Ciśnienia i Macierzy Korelacji Krzyżowej (CSM)}
+Ciśnienie $p_m$ mierzone przez $m$-ty mikrofon można modelować jako sumę $P$ ortogonalnych mechanizmów źródłowych, gdzie $f_{mj}$ to czynniki zależne od lokalizacji źródła i mikrofonu, a $q_j$ to siła $j$-tego źródła:
+\begin{equation}
+p_m = \sum_{j=1}^{P} f_{mj} q_j \quad \text{}
+\end{equation}
+Warunek ortogonalności powoduje, że macierz korelacji krzyżowej $C_{mm'}$ (CSM) może być przepisana jako suma macierzy $C_{mm',j}$, gdzie każda z nich odpowiada pojedynczemu $j$-temu mechanizmowi źródłowemu:
+\begin{equation}
+C_{mm'} = \sum_{j=1}^{P} C_{mm',j} \quad \text{}
+\end{equation}
+Dzięki temu każdą $j$-tą składową źródłową można mapować oddzielnie, zastępując $C_{mm'}$ w równaniu konwencjonalnego beamformingu (które ma postać $BF_{cb} = \frac{g^\dagger C g}{||g||^4}$) przez $C_{mm',j}$.
+
+\subsubsection{Dekompozycja Wartości Własnych}
+Obliczanie każdej ortogonalnej składowej poprzez wykorzystanie dekompozycji wartości własnych macierzy korelacji krzyżowej (CSM). CSM jest macierzą hermitowską i dodatnio półokreśloną. Wektory własne są ortogonalne, a wartości własne, które są dodatnie i rzeczywiste, aproksymują siły źródeł.
+Składową $C_{mm',j}$ można wyrazić za pomocą wektora własnego $v_j$ i wartości własnej $\lambda_j$ w następujący sposób:
+\begin{equation}
+C_{mm',j} = v_j \lambda_j v_j^\dagger \quad \text{}
+\end{equation}
+gdzie $v_j^\dagger$ oznacza sprzężonie hermitowskie wektora własnego.
+
+
+\subsection{Algorytm Clean-SC}
+Działanie CLEAN-SC polega na iteracyjnym usuwaniu części mapy akustycznej, która jest przestrzennie spójna z wykrytym głównym źródłem dźwięku. Proces ten poprawia rozdzielczość przestrzenną i zakres dynamiczny, co pozwala na odkrywanie wtórnych źródeł hałasu, które mogłyby być zamaskowane przez płaty boczne. Proces zaczyna się od wstępnej mapy akustycznej uzyskanej konwencjonalnym beamformingiem, a następnie iteracyjnie "czyści" mapę, usuwając przyczyniające się do niej artefakty.
+
+\subsubsection{Macierz Korelacji Krzyżowej (CSM)}
+Punktem wyjścia dla algorytmu CLEAN-SC jest macierz korelacji krzyżowej (CSM) sygnałów akustycznych, mierzone przez mikrofony. Zakłada się, że całkowita macierz CSM jest sumą nieskorelowanych źródeł:
+\begin{equation}
+C = \sum_{k=1}^{K} p_k p_k^\dagger \quad \text{}
+\end{equation}
+gdzie $K$ jest liczbą źródeł, a $p_k$ to $N$-wymiarowy wektor zawierający transformaty Fouriera sygnałów z $N$ mikrofonów dla danej częstotliwości $f$. Powyższe równanie jest prawdziwe przy założeniu braku dekoherencji sygnałów z tego samego źródła między różnymi mikrofonami oraz braku dodatkowego niespójnego szumu. W praktyce stosuje się również "przyciętą" macierz CSM, gdzie elementy na głównej przekątnej są zerowane w celu redukcji szumów własnych mikrofonów, takich jak szum wiatru czy szum elektroniczny, które nie zawierają informacji fazowej:
+\begin{equation}
+\bar{C}_{m,n} = \begin{cases} C_{m,n} & \text{jeśli } m \neq n \\ 0 & \text{jeśli } m = n \end{cases} \quad \text{dla } m,m' = 1 \ldots M \quad \text{}
+\end{equation}
+
+\subsubsection{Wektor Sterujący}
+Wektor sterujący $g_n(\xi)$ dla $n$-tego mikrofonu, odnoszący się do źródła w pozycji $\xi$, jest dany jako:
+\begin{equation}
+g_n(\xi) = -\frac{1}{4\pi||\vec{x}_n - \xi||} \exp \left( -2\pi i f \frac{||\vec{x}_n - \xi||}{c} \right) \quad \text{}
+\end{equation}
+gdzie $f$ jest częstotliwością, $c$ jest prędkością dźwięku, $\vec{x}_n$ jest pozycją $n$-tego mikrofonu, a $\xi$ jest lokalizacją źródła. Idealnie, wektory sterujące $g_k$ są proporcjonalne do wektorów źródłowych $p_k = a_k g_k$, gdzie $a_k$ są zespolonymi amplitudami źródeł.
+
+\subsubsection{Moc Źródła (Konwencjonalny Beamforming)}
+Moc źródła $A$ dla danej pozycji jest szacowana za pomocą konwencjonalnego beamformingu. Normalizowany wektor sterujący $w$ jest definiowany jako $w = \frac{g}{(\sum_{(m,n)\in S} ||g_m||^2 ||g_n||^2)^{1/2}}$. Moc źródła $A$ może być wówczas wyrażona jako:
+\begin{equation}
+A = w^\dagger \bar{C} w \quad \text{}
+\end{equation}
+gdzie $w^\dagger$ oznacza sprzężone hermitowskie wektora $w$.
+
+\subsubsection{Iteracyjny Proces Oczyszczania Mapy}
+Algorytm CLEAN-SC wykorzystuje iteracyjny proces do oczyszczania mapy akustycznej. Kluczową cechą jest to, że płaty boczne są przestrzennie spójne z głównymi źródłami, co pozwala na ich iteracyjne usuwanie.
+Główne kroki algorytmu to:
+\begin{enumerate}
+    \item \textbf{Generowanie początkowej ``brudnej'' mapy:} Na początku procesu definiuje się zdegradowaną macierz CSM $D^{(i)}$, gdzie $D^{(0)} = C$ (całkowita macierz CSM). Dla każdej lokalizacji $j$, początkowa "brudna mapa" $P^{(0)}_j$ jest obliczana jako:
+    \begin{equation}
+    P^{(0)}_j = w_j^\dagger \bar{D}^{(0)} w_j = w_j^\dagger \bar{C} w_j \quad \text{}
+    \end{equation}
+
+    \item \textbf{Wyszukiwanie piku:} W każdej iteracji ($i$), algorytm lokalizuje pozycję piku $\xi^{(i)}_{\text{max}}$ w bieżącej brudnej mapie $P^{(i)}_j$.
+
+    \item \textbf{Aktualizacja mapy (subtrakcja):} Zdegradowana macierz CSM jest aktualizowana, a następnie nowa mapa jest obliczana poprzez odjęcie "PSF-opodobnego" członu od bieżącej mapy. W literaturze, choć CLEAN-SC zazwyczaj nie używa "syntetycznych" PSF, to jednak w oryginalnych formułach do odejmowania stosuje się termin podobny do funkcji rozmycia punktu, dynamicznie wyznaczany na podstawie wektora sterującego zidentyfikowanego piku:
+    \begin{equation}
+    D^{(i+1)} = D^{(i)} - P^{(i)}_{\text{max}} g^{(i)}_{\text{max}} g^{(i)\dagger}_{\text{max}} 
+    \end{equation}
+    Następnie mapa akustyczna jest aktualizowana:
+    \begin{equation}
+    P^{(i+1)}_j = P^{(i)}_j - P^{(i)}_{\text{max}} w_j^\dagger \bar{D}^{(i)}[g^{(i)}_{\text{max}} g^{(i)\dagger}_{\text{max}}] w_j \quad \text{}
+    \end{equation}
+    (Należy zauważyć, że $w_j^\dagger \bar{D}^{(i)}[g^{(i)}_{\text{max}} g^{(i)\dagger}_{\text{max}}] w_j$ stanowi tu iloczyn formy kwadratowej, który de facto opisuje, jak źródło o charakterystyce $g^{(i)}_{\text{max}}$ "rozmywa" się w mapie wygenerowanej z $D^{(i)}$).
+
+    \item \textbf{Dodawanie ``czystego'' piku:} Jednocześnie z odejmowaniem artefaktów, do "czystej" mapy $Q^{(i)}_j$ dodawany jest "czysty pik" w miejscu zidentyfikowanego źródła:
+    \begin{equation}
+    Q^{(i)}_j = P^{(i)}_{\text{max}} \Phi(\xi_j - \xi_{\text{max}}) \quad \text{}
+    \end{equation}
+    gdzie $\Phi$ to funkcja "czystego piku", zazwyczaj funkcja Diraca, z $\Phi(0)=1$.
+
+    \item \textbf{Warunek stopu:} Proces iteracyjny jest kontynuowany, dopóki nie zostanie spełniony warunek stopu. Typowym warunkiem jest, gdy norma (lub "moc") zdegradowanej macierzy CSM przestaje się zmniejszać, co oznacza, że dalsze odejmowanie artefaktów przestaje być efektywne:
+    \begin{equation}
+    ||\bar{D}^{(I+1)}|| \ge ||\bar{D}^{(I)}|| \quad \text{}
+    \end{equation}
+    gdzie $I$ jest końcową liczbą iteracji.
+
+    \item \textbf{Końcowa oczyszczona mapa:} Po zakończeniu iteracji, oczyszczona mapa akustyczna $A_j$ jest sumą wszystkich "czystych pików" i ostatniej (potencjalnie wciąż "brudnej") mapy:
+    \begin{equation}
+    A_j = \sum_{i=0}^{I-1} Q^{(i)}_j + P^{(I)}_j \quad \text{}
+    \end{equation}
+    Oczekuje się, że ta mapa zawiera jedynie rzeczywiste źródła.
+\end{enumerate}
+
+\subsection{Algorytm CMF}
+Algorytm Covariance Matrix Fitting (CMF) jest podejściem stosowanym w dziedzinie beamformingu akustycznego do rozwiązywania problemu odwrotnego lokalizacji źródeł hałasu. W ramach problemu odwrotnego, celem jest określenie rozkładu źródeł akustycznych na podstawie pomiarów ciśnienia akustycznego zebranych przez zestaw mikrofonów. CMF ma na celu znalezienie kombinacji źródeł, która najlepiej pasuje do zmierzonej macierzy korelacji krzyżowej (CSM) sygnałów akustycznych. Jest to metoda, która dąży do uwzględnienia wszystkich źródeł jednocześnie, co jest cechą charakterystyczną metod odwrotnych.
+
+\subsubsection{Podstawowe definicje}
+Punktem wyjścia jest związek między ciśnieniem mierzone przez mikrofony a siłą źródeł. Zakłada się, że ciśnienie $p$ mierzone przez $M$ mikrofonów jest wynikiem superpozycji sygnałów z $S$ źródeł, gdzie $p$ jest wektorem ciśnień mikrofonowych, a $q$ jest wektorem sił źródeł. Zależność tę można opisać za pomocą macierzy radiacyjnej $G$:
+\begin{equation}
+p = Gq \quad \text{}
+\end{equation}
+gdzie $G$ jest macierzą o wymiarach $M \times S$.
+
+Macierz korelacji krzyżowej (CSM) dla ciśnień mikrofonowych, $P$, jest definiowana jako:
+\begin{equation}
+P = \langle pp^\dagger \rangle \quad \text{}
+\end{equation}
+gdzie $\langle \cdot \rangle$ oznacza uśrednianie w czasie, a $p^\dagger$ oznacza sprzężone transponowanie. Macierz $P$ ma wymiary $M \times M$.
+
+Podobnie, macierz korelacji krzyżowej dla sił źródeł, $Q$, jest definiowana jako:
+\begin{equation}
+Q = \langle qq^\dagger \rangle \quad \text{}
+\end{equation}
+gdzie $Q$ ma wymiary $S \times S$.
+
+Podstawowe równanie problemu odwrotnego, wyrażone w formie kwadratowej macierzy CSM, jest następujące:
+\begin{equation}
+P = G Q G^\dagger \quad \text{}
+\end{equation}
+Celem algorytmu CMF jest rozwiązanie tego równania w celu oszacowania $Q$ (macierzy sił źródeł) na podstawie zmierzonej macierzy $P$ (macierzy ciśnień mikrofonowych) i znanej macierzy $G$ (macierzy radiacyjnej).
+
+\subsubsection{Rozwiązanie problemu i założenia}
+Rozwiązanie problemu odwrotnego, tj. estymacja macierzy $Q$, jest często przedstawiane w ogólnej formie jako:
+\begin{equation}
+\hat{Q} = H P H^\dagger \quad \text{}
+\end{equation}
+gdzie $H$ jest operatorem odwrotnym.
+
+Kluczowym założeniem w algorytmie CMF, które znacznie upraszcza problem, jest założenie o \textbf{nieskorelowanych źródłach}. Oznacza to, że macierz mocy źródeł $Q$ staje się macierzą diagonalną, co pozwala na przekształcenie kwadratowej formy problemu akustycznego w standardowy układ liniowy, dla którego można uzyskać rozwiązanie w postaci rzeczywistej.
+
+\subsection{Algorytm RANSAC}
+\subsubsection{Idea Algorytmu}
+RANSAC zaczyna od możliwie najmniejszego początkowego zbioru danych i rozszerza go o spójne dane. Podstawowym założeniem jest, że dane składają się z "inlierów" (danych, których rozkład może być wyjaśniony przez dany zestaw parametrów modelu, choć mogą być obciążone szumem) oraz "outlierów" (danych, które nie pasują do modelu). Outliery mogą pochodzić z ekstremalnych wartości szumu, błędnych pomiarów lub niepoprawnych hipotez.
+
+\subsubsection{Kroki algorytmu}
+Algorytm RANSAC jest algorytmem iteracyjnym, która powtarza dwa główne kroki:
+\begin{enumerate}
+    \item \textbf{Generowanie hipotezy (Wybór próbki i dopasowanie modelu)}:
+    \begin{itemize}
+        \item Losowo wybierany jest minimalny podzbiór danych obserwacyjnych $S_k \subset U$, o rozmiarze $|S_k| = m$. Minimalna liczba próbek $m$ jest równa złożoności modelu geometrycznego, tj. minimalnej liczbie danych potrzebnych do obliczenia rozwiązania.
+        \item Na podstawie tego podzbioru obliczane są parametry modelu $p_k = f(S_k)$.
+    \end{itemize}
+    \item \textbf{Weryfikacja (Sprawdzenie spójności i wyznaczenie zbioru zgodności)}:
+    \begin{itemize}
+        \item Obliczana jest wartość kosztu $C_k = \sum_{x \in U} \rho(p_k, x)$ dla wszystkich punktów danych w zbiorze $U$, względem obliczonych parametrów $p_k$. Funkcja kosztu $\rho(p, x)$ mierzy dopasowanie pojedynczego punktu danych $x$ do modelu z parametrami $p$.
+        \item Punkty danych, które są spójne z modelem w ramach określonego progu błędu (tolerancji), tworzą tzw. zbiór konsensusu (consensus set).
+        \item Jeśli rozmiar zbioru konsensusu (np. liczba inlierów) jest większy niż zadany próg $d$, lub jeśli $C_k$ jest lepsze niż dotychczasowe $C^*$ (maksymalizacja funkcji kosztu), parametry $p_k$ zostają uznane za najlepsze dotychczasowe i zapisane jako $p^*$.
+        \item Model może być następnie ulepszony poprzez ponowną estymację parametrów, wykorzystując wszystkich członków nowo znalezionego zbioru konsensusu.
+    \end{itemize}
+    \item \textbf{Kryterium zakończenia}:
+    Procedura jest powtarzana, aż prawdopodobieństwo znalezienia lepszego rozwiązania spadnie poniżej zdefiniowanego progu $\eta$, lub po ustalonej z góry maksymalnej liczbie iteracji $k_{max}$. Jeśli po pewnej liczbie prób nie zostanie znaleziony zbiór konsensusu o wystarczającej liczbie członków, algorytm zwraca model z największym dotychczas znalezionym zbiorem konsensusu lub kończy się niepowodzeniem.
+\end{enumerate}
+\textbf{Funkcja kosztu $\rho$}: Dla przykładu detekcji linii, funkcja błędu $\rho$ jest odległością (Euklidesową) punktu od linii.
+
+\subsubsection{Parametry Algorytmu}
+
+Algorytm RANSAC wymaga zdefiniowania kilku kluczowych parametrów, które mają wpływ na jego działanie, skuteczność i prawdopodobieństwo znalezienia poprawnego modelu.
+
+\begin{itemize}
+    \item \textbf{Minimalna liczba punktów danych ($n$)}: Jest to minimalna liczba punktów danych wymagana do estymacji parametrów modelu. Kardynalność podpróbki (czyli liczba danych w tej podpróbce) musi być wystarczająca do wyznaczenia parametrów modelu. Na przykład, jeśli celem jest dopasowanie linii w dwóch wymiarach, minimalna liczba punktów wynosi dwa, ponieważ linia jest jednoznacznie określona przez dwa punkty.
+
+    \item \textbf{Maksymalna liczba iteracji ($k$)}: Określa maksymalną liczbę iteracji dozwolonych w algorytmie. Algorytm RANSAC jest niedeterministyczny, co oznacza, że daje rozsądny wynik tylko z pewnym prawdopodobieństwem, które wzrasta wraz z liczbą iteracji. Liczba iteracji $k$ może być w przybliżeniu określona jako funkcja pożądanego prawdopodobieństwa sukcesu ($p$).
+    
+    Niech $p$ będzie pożądanym prawdopodobieństwem, że algorytm RANSAC dostarczy co najmniej jeden użyteczny wynik. W uproszczeniu, RANSAC zwraca pomyślny wynik, jeśli w którejś iteracji wybierze wyłącznie inliery z wejściowego zbioru danych, gdy wybiera $n$ punktów do estymacji parametrów modelu.
+    
+    Niech $\varepsilon$ będzie prawdopodobieństwem wybrania inliera za każdym razem, gdy wybierany jest pojedynczy punkt danych:
+    \begin{equation}
+    \varepsilon = \frac{\text{liczba inlierów w danych}}{\text{liczba punktów w danych}}
+    \end{equation}
+    
+    
+    Prawdopodobieństwo, że wszystkie $n$ punktów wybranych do estymacji modelu są inlierami, wynosi $\varepsilon^n$. Prawdopodobieństwo, że co najmniej jeden z $n$ punktów jest elementem odstającym, wynosi $1 - \varepsilon^n$.
+    
+    Prawdopodobieństwo, że algorytm nigdy nie wybierze zbioru $n$ punktów, które są wyłącznie inlierami, po $k$ iteracjach wynosi $(1 - \varepsilon^n)^k$. Jest to równoważne z $1 - p$ (prawdopodobieństwem, że algorytm nie zakończy się sukcesem) w skrajnym przypadku. Stąd, aby osiągnąć pożądane prawdopodobieństwo sukcesu $p$, liczba iteracji $k$ musi spełniać:
+    \begin{equation}
+    1 - p \le (1 - \varepsilon^n)^k
+    \end{equation}
+    Co po zlogarytmowaniu obu stron prowadzi do wzoru na $k$:
+    \begin{equation}
+    k \ge \frac{\log(1 - p)}{\log(1 - \varepsilon^n)}
+    \end{equation}
+    
+    Należy zauważyć, że ten wzór zakłada niezależny wybór punktów, co oznacza, że wybrany punkt może być ponownie wybrany w tej samej iteracji.
+    
+    \item \textbf{Próg błędu ($t$)}: Jest to wartość progowa używana do określenia, czy punkty danych są dobrze dopasowane do modelu i są uznawane za inliery. Element danych zostanie uznany za element odstający, jeśli nie pasuje do modelu w ramach tego progu błędu, który definiuje maksymalne odchylenie danych dla inlierów.
+
+    \item \textbf{Wymagana liczba punktów zgodnych ($d$)}: Jest to liczba bliskich punktów danych (inlierów) wymaganych do stwierdzenia, że model dobrze pasuje do danych. Zbiór inlierów uzyskanych dla dopasowanego modelu nazywany jest zbiorem konsensusu (consensus set). Jeśli liczba elementów w zbiorze konsensusu jest większa niż $d$, algorytm uznaje, że znaleziono odpowiedni model.
+\end{itemize}
+
+
+
+
+\newpage
+\section{Opis projektu}
+
+Poniżej przedstawiono kluczowe kroki realizacji projektu:
+
+\begin{enumerate}
+\item \textbf{Przetwarzanie sygnału dźwiękowego}:
+\begin{itemize}
+\item Wczytanie plików dźwiękowych w formacie WAV (nagrania wall1, wall2, wall3) o częstotliwości próbkowania 96 kHz.
+\item Podział danych dźwiękowych na ramki o długości odpowiadającej 30 klatkom na sekundę (FPS), co umożliwiło analizę w czasie rzeczywistym.
+\item Zdefiniowanie geometrii mikrofonów na podstawie pliku XML oraz siatki prostokątnej o wymiarach od $-2$ do $+2$ m w osiach $x$ i $y$, z krokiem 0.1 m, na wysokości $z=1$ m.
+\end{itemize}
+
+\item \textbf{Zastosowanie algorytmów beamformingu}:
+\begin{itemize}
+    \item Obliczenie spektrum mocy (PowerSpectra) dla każdej ramki sygnału z użyciem okna Hanninga, rozmiaru bloku 128 próbek i 50\% nakładania.
+    \item Zastosowanie wybranego algorytmu beamformingu (DAS, Functional Beamforming, MUSIC, Capon) do wyznaczenia mapy akustycznej.
+    \item Określenie punktu maksymalnej amplitudy na siatce, reprezentującego szacowaną pozycję źródła dźwięku (drona), oraz utworzenie powiększonej siatki ogniskowania (RectGrid) o rozmiarze $\pm 0.2$ m wokół tego punktu.
+\end{itemize}
+
+\item \textbf{Generowanie wizualizacji map akustycznych}:
+\begin{itemize}
+    \item Wykorzystanie biblioteki matplotlib do tworzenia animacji map akustycznych dla każdej ramki, zapisanych jako pliki MP4 (ffmpeg).
+    \item Oznaczenie na mapach szacowanej pozycji drona oraz wyświetlenie współrzędnych punktu maksymalnej amplitudy.
+    \item Zapisanie współrzędnych punktów ogniskowania i szacowanych pozycji drona do plików .npy dla dalszej analizy.
+\end{itemize}
+
+\item \textbf{Korekta trajektorii za pomocą transformacji afinicznej}:
+\begin{itemize}
+    \item Wczytanie referencyjnych trajektorii drona  oraz szacowanych punktów ogniskowania dla każdego algorytmu.
+    \item Zastosowanie algorytmu RANSAC do wyznaczenia macierzy transformacji afinicznej, mapującej szacowane punkty na trajektorie referencyjne.
+    \item Przekształcenie szacowanych punktów za pomocą wyznaczonej macierzy, a następnie zastosowanie filtrów: ograniczenie zakresu do rozdzielczości obrazu oraz eliminacja wartości odstających.
+\end{itemize}
+
+\item \textbf{Obliczenie błędu lokalizacji}:
+\begin{itemize}
+    \item Obliczenie błędu lokalizacji jako normy \( L_{\infty} \) między przekształconymi punktami ogniskowania a referencyjną trajektorią dla każdego nagrania i algorytmu.
+    \item Zapisanie błędów do plików .npy oraz obliczenie statystyk: średniej, mediany, odchylenia standardowego i RMSE.
+\end{itemize}
+
+\item \textbf{Wizualizacja wyników}:
+\begin{itemize}
+    \item Wygenerowanie wykresów rozkładu błędów oraz różnic między kolejnymi błędami dla każdego algorytmu i nagrania.
+    \item Utworzenie porównawczych wykresów trajektorii szacowanych i referencyjnych w formacie SVG, z użyciem różnych map kolorów dla wizualizacji czasowej.
+    \item Sporządzenie dystrybuant błędów (CED) dla każdego algorytmu indywidualnie oraz dla wszystkich algorytmów dla każdego nagrania, zapisując je jako pliki SVG.
+\end{itemize}
+
+\item \textbf{Porównanie skuteczności i wydajności}:
+\begin{itemize}
+    \item Pomiar czasu przetwarzania dla każdej ramki i całkowitego czasu dla każdego nagrania, zapisanie wyników w tabelach (np. Tabela 1--3).
+    \item Ocena skuteczności na podstawie rozkładu błędów i dystrybuant, co umożliwiło porównanie precyzji lokalizacji między algorytmami.
+\end{itemize}
+\end{enumerate}
+
+\section{Technologie i narzędzia}
+Python 3.12.4\\\\
+Biblioteki:
+    \begin{itemize}
+    \item{Acoular 25.3.post1 \cite{acoular}}
+    \item{Numpy 2.1.3 \cite{numpy}}
+    \item{Scipy 1.15.2 \cite{scipy}}
+    \item{Matplotlib 3.10.1 \cite{matplotlib}}
+    \end{itemize}
+MATLAB 24.2.0.2863752 Ground Truth Labeler \cite{labeler}\\\\
+ffmpeg 7.1.1 \cite{ffmpeg}\\\\
+Audacity 2.4.2 \cite{audacity}\\\\
+Obliczenia zostały przeprowadzone na maszynie z procesorem Intel® Core™ i5-9300H \cite{intel}.
+
+\section{Implementacja}
+Utworzono repozytorium kodu na platformie GitHub:\\
+\href{https://github.com/zasilacz-szklanki/DroneLocalizationProject}{https://github.com/zasilacz-szklanki/DroneLocalizationProject}
+
+\section{Porównanie skuteczności i wydajności}
+\subsection{Miara wydajności}
+Wydajność mierzona jest przez rzeczywisty czas życia procesu powstałego na skutek uruchomienia skryptu w języku Python.
+
+\subsection{Miara skuteczności}
+Skuteczność jest mierzona poprzez różnicę odległości punktów zaznaczonych ręcznie od punktów wyznaczonych przez program (norma $L_\infty$).
+
+\newpage
+
+\subsection{Nagranie wall1}
+Liczba ramek = 2411
+
+\begin{longtable}{
+|>{\centering\arraybackslash}m{3.0cm}
+|>{\centering\arraybackslash}m{3.0cm}
+|>{\centering\arraybackslash}m{3.0cm}
+|>{\centering\arraybackslash}m{3.0cm}
+|>{\centering\arraybackslash}m{3.0cm}|
+}
+\hline
+\textbf{Algorytm} & \textbf{Całkowity czas dla ramek [s]} & \textbf{Średni czas dla ramki [s]} & \textbf{Maksymalny czas dla ramki [s]} & \textbf{Minimalny czas dla ramki [s]} \\
+\hline
+\endfirsthead
+
+\hline
+\textbf{Algorytm} & \textbf{Całkowity czas dla ramek [s]} & \textbf{Średni czas dla ramki [s]} & \textbf{Maksymalny czas dla ramki [s]} & \textbf{Minimalny czas dla ramki [s]} \\
+\hline
+\endhead
+
+\textbf{DAS} & 60.1819 & 0.0249 & 0.1758 & 0.0181\\
+\hline
+\textbf{Ortogonalny} & 62.1833 & 0.0257 & 0.1120 & 0.0199\\
+\hline
+\textbf{Clean-SC} & 588.0144 & 0.2437 & 0.3855 & 0.2154\\
+\hline
+\textbf{CMF} & 5763.4069 & 2.3894 & 3.4873 & 1.5540\\
+\hline
+
+\caption{Podsumowanie czasu przetwarzania nagrania wall1}
+\end{longtable}
+
+\subsubsection{Trajektorie}
+%\begin{comment}
+\vspace{-20pt}
+\begin{figure}[h]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall1/traj/wall1_BeamformerBase_comparison.svg}
+        \vspace{-40pt}
+        \caption{Trajektoria lotu drona dla algorytmu DAS dla nagrania wall1}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall1/traj/wall1_BeamformerOrth_comparison.svg}
+        \vspace{-40pt}
+        \caption{Trajektoria lotu drona dla algorytmu Ortogonalnego dla nagrania wall1}
+    \end{minipage}
+\end{figure}
+
+\vspace{-20pt}
+
+\begin{figure}[h]
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall1/traj/wall1_BeamformerCleansc_comparison.svg}
+        \vspace{-40pt}
+        \caption{Trajektoria lotu drona dla algorytmu Clean-SC dla nagrania wall1}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall1/traj/wall1_BeamformerCMF_comparison.svg}
+        \vspace{-40pt}
+        \caption{Trajektoria lotu drona dla algorytmu CMF dla nagrania wall1}
+    \end{minipage}
+\end{figure}
+%\end{comment}
+
+\newpage
+\subsubsection{Analiza błędów}
+%\begin{comment}
+\vspace{-20pt}
+\begin{figure}[h]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall1/error/wall1_BeamformerBase_error_dist.svg}
+        \vspace{-30pt}
+        \caption{Rozkład błędu dla algorytmu DAS dla nagrania wall1}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall1/error/wall1_BeamformerOrth_error_dist.svg}
+        \vspace{-30pt}
+        \caption{Rozkład błędu dla algorytmu Ortogonalnego dla nagrania wall1}
+    \end{minipage}
+\end{figure}
+\vspace{-20pt}
+\begin{figure}[h]
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall1/error/wall1_BeamformerCleansc_error_dist.svg}
+        \vspace{-30pt}
+        \caption{Rozkład błędu dla algorytmu Clean-SC dla nagrania wall1}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall1/error/wall1_BeamformerCMF_error_dist.svg}
+        \vspace{-30pt}
+        \caption{Rozkład błędu dla algorytmu CMF dla nagrania wall1}
+    \end{minipage}
+\end{figure}
+%\end{comment}
+
+\newpage
+\subsubsection{Dystrybuanta}
+%\begin{comment}
+\begin{figure}[h]
+    \centering
+    \includesvg[width=\textwidth]{img/wall1/wall1_ced_all_.svg}
+    \caption{Dystrybuanta rozkładu błędu dla wszystkich algorytmów dla nagrania wall1}
+\end{figure}
+%\end{comment}
+
+\newpage
+
+\subsection{Nagranie wall2}
+Liczba ramek = 1252
+
+\begin{longtable}{
+|>{\centering\arraybackslash}m{3.0cm}
+|>{\centering\arraybackslash}m{3.0cm}
+|>{\centering\arraybackslash}m{3.0cm}
+|>{\centering\arraybackslash}m{3.0cm}
+|>{\centering\arraybackslash}m{3.0cm}|
+}
+\hline
+\textbf{Algorytm} & \textbf{Całkowity czas dla ramek [s]} & \textbf{Średni czas dla ramki [s]} & \textbf{Maksymalny czas dla ramki [s]} & \textbf{Minimalny czas dla ramki [s]} \\
+\hline
+\endfirsthead
+
+\hline
+\textbf{Algorytm} & \textbf{Całkowity czas dla ramek [s]} & \textbf{Średni czas dla ramki [s]} & \textbf{Maksymalny czas dla ramki [s]} & \textbf{Minimalny czas dla ramki [s]} \\
+\hline
+\endhead
+
+\textbf{DAS} & 28.8960 & 0.0230 & 0.1191 & 0.0181\\
+\hline
+\textbf{Ortogonalny} & 31.9241 & 0.0254 & 0.1066 & 0.0209\\
+\hline
+\textbf{Clean-SC} & 315.9844 & 0.2521 & 0.5653 & 0.2043 \\
+\hline
+\textbf{CMF} & 3045.7364 & 2.4307 & 3.8712 & 1.6587\\
+\hline
+
+\caption{Podsumowanie czasu przetwarzania nagrania wall2}
+\end{longtable}
+
+
+\subsubsection{Trajektorie}
+%\begin{comment}
+\vspace{-20pt}
+\begin{figure}[h]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall2/traj/wall2_BeamformerBase_comparison.svg}
+        \vspace{-40pt}
+        \caption{Trajektoria lotu drona dla algorytmu DAS dla nagrania wall2}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall2/traj/wall2_BeamformerOrth_comparison.svg}
+        \vspace{-40pt}
+        \caption{Trajektoria lotu drona dla algorytmu Ortogonalnego dla nagrania wall2}
+    \end{minipage}
+\end{figure}
+
+\vspace{-20pt}
+
+\begin{figure}[h]
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall2/traj/wall2_BeamformerCleansc_comparison.svg}
+        \vspace{-40pt}
+        \caption{Trajektoria lotu drona dla algorytmu Clean-SC dla nagrania wall2}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall2/traj/wall2_BeamformerCMF_comparison.svg}
+        \vspace{-40pt}
+        \caption{Trajektoria lotu drona dla algorytmu CMF dla nagrania wall2}
+    \end{minipage}
+\end{figure}
+%\end{comment}
+
+\newpage
+\subsubsection{Analiza błędów}
+\vspace{-20pt}
+\begin{figure}[h]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall2/error/wall2_BeamformerBase_error_dist.svg}
+        \vspace{-30pt}
+        \caption{Rozkład błędu dla algorytmu DAS dla nagrania wall2}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall2/error/wall2_BeamformerOrth_error_dist.svg}
+        \vspace{-30pt}
+        \caption{Rozkład błędu dla algorytmu Ortogonalnego dla nagrania wall2}
+    \end{minipage}
+\end{figure}
+\vspace{-20pt}
+\begin{figure}[h]
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall2/error/wall2_BeamformerCleansc_error_dist.svg}
+        \vspace{-30pt}
+        \caption{Rozkład błędu dla algorytmu Clean-SC dla nagrania wall2}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall2/error/wall2_BeamformerCMF_error_dist.svg}
+        \vspace{-30pt}
+        \caption{Rozkład błędu dla algorytmu CMF dla nagrania wall2}
+    \end{minipage}
+\end{figure}
+
+\newpage
+\subsubsection{Dystrybuanta}
+%\begin{comment}
+\begin{figure}[h]
+    \centering
+    \includesvg[width=\textwidth]{img/wall2/wall2_ced_all_.svg}
+    \caption{Dystrybuanta rozkładu błędu dla wszystkich algorytmów dla nagrania wall2}
+\end{figure}
+%\end{comment}
+
+\newpage
+
+\subsection{Nagranie wall3}
+Liczba ramek = 3410
+
+\begin{longtable}{
+|>{\centering\arraybackslash}m{3.0cm}
+|>{\centering\arraybackslash}m{3.0cm}
+|>{\centering\arraybackslash}m{3.0cm}
+|>{\centering\arraybackslash}m{3.0cm}
+|>{\centering\arraybackslash}m{3.0cm}|
+}
+\hline
+\textbf{Algorytm} & \textbf{Całkowity czas dla ramek [s]} & \textbf{Średni czas dla ramki [s]} & \textbf{Maksymalny czas dla ramki [s]} & \textbf{Minimalny czas dla ramki [s]} \\
+\hline
+\endfirsthead
+
+\hline
+\textbf{Algorytm} & \textbf{Całkowity czas dla ramek [s]} & \textbf{Średni czas dla ramki [s]} & \textbf{Maksymalny czas dla ramki [s]} & \textbf{Minimalny czas dla ramki [s]} \\
+\hline
+\endhead
+
+\textbf{DAS} & 79.6908 & 0.0233 & 0.1209 & 0.0180 \\
+\hline
+\textbf{Ortogonalny} & 87.0646 & 0.0255 & 0.1383 & 0.0208\\
+\hline
+\textbf{Clean-SC} & 821.6074 & 0.2408  & 0.3684 & 0.1902\\
+\hline
+\textbf{CMF} & 8700.8239 & 2.5508 & 3.7938 & 1.6426\\
+\hline
+
+\caption{Podsumowanie czasu przetwarzania nagrania wall3}
+\end{longtable}
+
+
+\subsubsection{Trajektorie}
+%\begin{comment}
+\vspace{-20pt}
+\begin{figure}[h]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall3/traj/wall3_BeamformerBase_comparison.svg}
+        \vspace{-40pt}
+        \caption{Trajektoria lotu drona dla algorytmu DAS dla nagrania wall3}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall3/traj/wall3_BeamformerOrth_comparison.svg}
+        \vspace{-40pt}
+        \caption{Trajektoria lotu drona dla algorytmu Ortogonalnego dla nagrania wall3}
+    \end{minipage}
+\end{figure}
+
+\vspace{-20pt}
+
+\begin{figure}[h]
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall3/traj/wall3_BeamformerCleansc_comparison.svg}
+        \vspace{-40pt}
+        \caption{Trajektoria lotu drona dla algorytmu Clean-SC dla nagrania wall3}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall3/traj/wall3_BeamformerCMF_comparison.svg}
+        \vspace{-40pt}
+        \caption{Trajektoria lotu drona dla algorytmu CMF dla nagrania wall3}
+    \end{minipage}
+\end{figure}
+%\end{comment}
+
+\newpage
+\subsubsection{Analiza błędów}
+%\begin{comment}
+\vspace{-20pt}
+\begin{figure}[h]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall3/error/wall3_BeamformerBase_error_dist.svg}
+        \vspace{-30pt}
+        \caption{Rozkład błędu dla algorytmu DAS dla nagrania wall3}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall3/error/wall3_BeamformerOrth_error_dist.svg}
+        \vspace{-30pt}
+        \caption{Rozkład błędu dla algorytmu Ortogonalnego dla nagrania wall3}
+    \end{minipage}
+\end{figure}
+\vspace{-20pt}
+\begin{figure}[h]
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall3/error/wall3_BeamformerCleansc_error_dist.svg}
+        \vspace{-30pt}
+        \caption{Rozkład błędu dla algorytmu Clean-SC dla nagrania wall3}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/wall3/error/wall3_BeamformerCMF_error_dist.svg}
+        \vspace{-30pt}
+        \caption{Rozkład błędu dla algorytmu CMF dla nagrania wall3}
+    \end{minipage}
+\end{figure}
+%\end{comment}
+
+\newpage
+\subsubsection{Dystrybuanta}
+%\begin{comment}
+\begin{figure}[h]
+    \centering
+    \includesvg[width=\textwidth]{img/wall3/wall3_ced_all_.svg}
+    \caption{Dystrybuanta rozkładu błędu dla wszystkich algorytmów dla nagrania wall3}
+\end{figure}
+%\end{comment}
+
+\newpage
+
+\section{Podsumowanie}
+\subsection{Wnioski}
+Na podstawie przeprowadzonych eksperymentów porównujących skuteczność i wydajność algorytmów lokalizacji drona (DAS, Ortogonalny, Clean-SC, CMF) przy użyciu biblioteki Acoular, można wyciągnąć następujące wnioski:
+
+\begin{enumerate}
+    \item \textbf{Wydajność obliczeniowa}: 
+    \begin{itemize}
+        \item Algorytm DAS wykazał się najkrótszym całkowitym czasem przetwarzania dla wszystkich testowanych nagrań, co czyni go najbardziej efektywnym pod względem czasu obliczeń.
+        \item Algorytm Ortogonalny również osiągał konkurencyjne czasy, będąc minimalnie wolniejszym od DAS.
+        \item Algorytm Clean-SC przetwarzał nagrania w dziesięciokrotnie dłuższy czasie.
+        \item Algorym CMF wykazał się najdłuższym czasem przetwarzania niemal stukrotnie dłuższym od algorytmów DAS i Ortogonalnego.
+    \end{itemize}
+    
+    \item \textbf{Skuteczność lokalizacji}: 
+        Skuteczność mierzona normą  $L_{\infty}$ (różnica między ręcznie wyznaczonymi a automatycznie określonymi punktami) wskazuje, że algorytmy różnią się w precyzji lokalizacji. Rozkłady błędów oraz dystrybuanty błędów sugerują, że algorytmy DAS i Ortogonalny oferują lepszą rozdzielczość przestrzenną i mniejsze błędy w porównaniu do Clean-SC i CMF.
+\end{enumerate}
+
+\subsection{Dystrybuanty}
+\begin{figure}[h]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/all_ced/BeamformerBase_ced.svg}
+        \vspace{-20pt}
+        \caption{Dystrybuanty błędów dla algorytmu DAS dla wszystkich nagrań}
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/all_ced/BeamformerOrth_ced.svg}
+        \vspace{-20pt}
+        \caption{Dystrybuanty błędów dla algorytmu Ortogonalnego dla wszystkich nagrań}
+    \end{minipage}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/all_ced/BeamformerCleansc_ced.svg}
+        \caption{Dystrybuanty błędów dla algorytmu Clean-SC dla wszystkich nagrań}
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{img/all_ced/BeamformerCMF_ced.svg}
+        \caption{Dystrybuanty błędów dla algorytmu CMF dla wszystkich nagrań}
+    \end{minipage}
+\end{figure}
+
+\newpage
+\printbibliography[heading=bibintoc]
+
+\end{document}
